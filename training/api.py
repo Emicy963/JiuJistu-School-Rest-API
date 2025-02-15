@@ -2,6 +2,7 @@ from ninja import Router
 from .schema import StudentSchema
 from .models import Student
 from ninja.errors import HttpError
+from typing import List
 
 training_router = Router()
 
@@ -33,4 +34,7 @@ def creat_student(request, student_schema: StudentSchema):
 
     return student
 
-
+@training_router.get('/students/', response=List[StudentSchema])
+def list_student(request):
+    students = Student.objects.all()
+    return students
