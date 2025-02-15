@@ -4,4 +4,4 @@ from .models import Student
 class StudentSchema(ModelSchema):
     class Meta:
         model = Student
-        fieds = ['nome', 'email', 'belt', 'date_birth']
+        fields = ['name', 'email', 'belt', 'date_birth']
