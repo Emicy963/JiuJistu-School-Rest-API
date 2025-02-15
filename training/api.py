@@ -1,8 +1,9 @@
 from ninja import Router
-from .schema import StudentSchema
-from .models import Student
+from .schema import StudentSchema, ProgressStudentSchema
+from .models import Student, CompletedClass
 from ninja.errors import HttpError
 from typing import List
+from .graduation import *
 
 training_router = Router()
 
@@ -38,3 +39,22 @@ def creat_student(request, student_schema: StudentSchema):
 def list_student(request):
     students = Student.objects.all()
     return students
+
+@training_router.get('/progress_student/', response={200: ProgressStudentSchema})
+def progress_student(request, email_student: str):
+    student = Student.objects.get(email=email_student)
+    now_belt = student.get_belt_display()
+    n = order_belt.get(now_belt, 0)
+
+    total_class_next_belt = calculate_lesson_to_upgrade(n)
+    total_class_concluid_belt = CompletedClass.objects.filter(student=student, now_belt=student.belt).count()
+    were_left_classes = total_class_next_belt - total_class_concluid_belt
+
+    return {
+        'email': student.email,
+        'name': student.name,
+        'belt': now_belt,
+        'total_class':
+        total_class_concluid_belt,
+        'class_for_next_belt': were_left_classes
+    }
