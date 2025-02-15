@@ -4,6 +4,7 @@ from .models import Student, CompletedClass
 from ninja.errors import HttpError
 from typing import List
 from .graduation import *
+from datetime import date
 
 training_router = Router()
 
@@ -85,3 +86,22 @@ def class_held(request, class_held: ClassHeldSchema):
     CompletedClass.objects.bulk_create(class_)"""
     
     return 200, f'Aula realizada para o aluno: {student.name}'
+
+@training_router.put('/students/{student_id}', response=StudentSchema)
+def upgrade_student(request, student_id: int, student_data: StudentSchema):
+    student = Student.objects.get(id=student_id)
+    age = date.today() - student.date_birth
+
+    if int(age.days/365) < 18 and student_data.dict()['belt'] in ('A', 'R', 'M', 'P'):
+        raise HttpError(400, 'Menores de 18 não podem receber essa faixa!')
+    
+    """ That's work but for so many variable it's not ok! """
+    #student.name = student_data.dict()['name']
+    #student.email = student_data.dict()['email']
+    #student.belt = student_data.dict()['belt']
+
+    for attr, value in student_data.dict().items():
+        if value:
+            setattr(student, attr, value)
+    student.save()
+    return student
