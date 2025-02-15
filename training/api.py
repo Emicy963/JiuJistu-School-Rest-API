@@ -1,5 +1,5 @@
 from ninja import Router
-from .schema import StudentSchema, ProgressStudentSchema
+from .schema import StudentSchema, ProgressStudentSchema, ClassHeldSchema
 from .models import Student, CompletedClass
 from ninja.errors import HttpError
 from typing import List
@@ -58,3 +58,30 @@ def progress_student(request, email_student: str):
         total_class_concluid_belt,
         'class_for_next_belt': were_left_classes
     }
+
+@training_router.post('/class_held/', response={200: str})
+def class_held(request, class_held: ClassHeldSchema):
+    qtd = class_held.dict()['qtd']
+    email_student = class_held.dict()['email_student']
+    
+    if qtd <= 0:
+        raise HttpError(400, 'Quantidade de aula deve ser maior que zero!')
+    
+    student = Student.objects.get(email=email_student)
+
+    """ Menos útil em questão de performence """
+    for _ in range(0, qtd):
+        ch = CompletedClass(
+            student=student,
+            now_belt=student.belt
+        )
+        ch.save()
+
+    """ Mais relevante em questão de performance
+        class_ = [
+        CompletedClass(student=student, belt=student.belt)
+        for _ in range(qtd)
+    ]
+    CompletedClass.objects.bulk_create(class_)"""
+    
+    return 200, f'Aula realizada para o aluno: {student.name}'
